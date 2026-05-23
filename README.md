@@ -28,6 +28,7 @@ Use o RepoHealth para:
 - Suporte a inglês com `--lang en`
 - Nota de saúde do repositório de 0 a 100
 - Explicação clara de cada problema encontrado
+- Relatório Markdown para baixar, anexar ou colar em uma IA
 - Geração segura de arquivos com `repohealth fix`
 - Saída JSON para automações
 - Gate de nota mínima para CI com `--min-score`
@@ -52,6 +53,12 @@ Abra a interface gráfica:
 
 ```bash
 node ./src/cli.mjs ui
+```
+
+Gere um relatório Markdown:
+
+```bash
+node ./src/cli.mjs report --output repohealth-report.md
 ```
 
 ## Uso rápido
@@ -86,6 +93,12 @@ Criar os arquivos iniciais:
 node ./src/cli.mjs fix "C:\caminho\para\meu-projeto"
 ```
 
+Gerar relatório para compartilhar ou colar em uma IA:
+
+```bash
+node ./src/cli.mjs report "C:\caminho\para\meu-projeto" --output repohealth-report.md
+```
+
 ## Interface gráfica
 
 O comando abaixo inicia um servidor local e tenta abrir o navegador automaticamente:
@@ -106,11 +119,14 @@ Iniciar sem abrir o navegador:
 node ./src/cli.mjs ui --no-open
 ```
 
+Na interface, o botão **Relatório** baixa um arquivo `.md` com a nota, prioridades, checks e um prompt pronto para pedir ajuda a uma IA.
+
 ## Comandos da CLI
 
 ```bash
 repohealth scan [caminho] [--json] [--min-score <número>] [--lang pt-BR|en]
 repohealth fix [caminho] [--dry-run] [--json] [--lang pt-BR|en]
+repohealth report [caminho] [--output <arquivo>] [--lang pt-BR|en]
 repohealth ui [caminho] [--port <número>] [--no-open] [--lang pt-BR|en]
 repohealth help
 repohealth version
@@ -163,6 +179,8 @@ Antes de aplicar mudanças, você pode usar:
 ```bash
 node ./src/cli.mjs fix --dry-run
 ```
+
+O comando `report` não altera o projeto analisado. Ele apenas imprime ou salva um arquivo Markdown com o diagnóstico.
 
 ## Desenvolvimento
 

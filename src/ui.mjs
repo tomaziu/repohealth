@@ -5,6 +5,7 @@ import path from "node:path";
 import { URL } from "node:url";
 import { applyFixes } from "./fix.mjs";
 import { resolveLanguage, t } from "./i18n.mjs";
+import { createReport, reportFileName } from "./report.mjs";
 import { scanRepository } from "./scan.mjs";
 
 export async function startUiServer(options = {}) {
@@ -43,6 +44,15 @@ async function handleRequest(request, response, context) {
     const target = resolveTarget(requestUrl.searchParams.get("path") || context.root, context.language);
     const language = resolveLanguage(requestUrl.searchParams.get("lang") || context.language);
     sendJson(response, 200, scanRepository(target, { lang: language }));
+    return;
+  }
+
+  if (request.method === "GET" && requestUrl.pathname === "/api/report") {
+    const target = resolveTarget(requestUrl.searchParams.get("path") || context.root, context.language);
+    const language = resolveLanguage(requestUrl.searchParams.get("lang") || context.language);
+    const result = scanRepository(target, { lang: language });
+    const report = createReport(result, { lang: language });
+    sendMarkdown(response, report, reportFileName(target));
     return;
   }
 
@@ -160,6 +170,15 @@ function sendJson(response, status, data) {
     "cache-control": "no-store",
   });
   response.end(JSON.stringify(data, null, 2));
+}
+
+function sendMarkdown(response, markdown, filename) {
+  response.writeHead(200, {
+    "content-type": "text/markdown; charset=utf-8",
+    "content-disposition": `attachment; filename="${filename}"`,
+    "cache-control": "no-store",
+  });
+  response.end(markdown);
 }
 
 function htmlTemplate({ root, language }) {
@@ -315,7 +334,7 @@ function htmlTemplate({ root, language }) {
 
       .path-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        grid-template-columns: minmax(0, 1fr) auto auto auto auto;
         gap: 10px;
         align-items: end;
       }
@@ -609,6 +628,7 @@ function htmlTemplate({ root, language }) {
               <input id="repoPath" autocomplete="off">
             </label>
             <button class="primary" id="scanButton" type="button">Escanear</button>
+            <button class="secondary" id="reportButton" type="button">Relatório</button>
             <button class="secondary" id="previewButton" type="button">Prévia</button>
             <button class="danger" id="fixButton" type="button">Aplicar</button>
           </div>
@@ -661,9 +681,11 @@ function htmlTemplate({ root, language }) {
           scanning: "Escaneando...",
           fixing: "Aplicando correções...",
           previewing: "Gerando prévia...",
+          reporting: "Gerando relatório...",
           ready: "Pronto.",
           preview: "Prévia",
           applied: "Correções aplicadas.",
+          downloaded: "Relatório baixado.",
           noChanges: "Nenhum arquivo seguro para criar.",
           grade: "Nota",
           files: "Arquivos",
@@ -683,9 +705,11 @@ function htmlTemplate({ root, language }) {
           scanning: "Scanning...",
           fixing: "Applying fixes...",
           previewing: "Previewing...",
+          reporting: "Generating report...",
           ready: "Ready.",
           preview: "Preview",
           applied: "Fixes applied.",
+          downloaded: "Report downloaded.",
           noChanges: "No safe files to create.",
           grade: "Grade",
           files: "Files",
@@ -707,6 +731,7 @@ function htmlTemplate({ root, language }) {
         repoPath: document.querySelector("#repoPath"),
         language: document.querySelector("#language"),
         scanButton: document.querySelector("#scanButton"),
+        reportButton: document.querySelector("#reportButton"),
         previewButton: document.querySelector("#previewButton"),
         fixButton: document.querySelector("#fixButton"),
         statusLine: document.querySelector("#statusLine"),
@@ -728,6 +753,7 @@ function htmlTemplate({ root, language }) {
       elements.language.value = window.REPOCARE.language || "pt-BR";
 
       elements.scanButton.addEventListener("click", () => scan());
+      elements.reportButton.addEventListener("click", () => downloadReport());
       elements.previewButton.addEventListener("click", () => fix({ dryRun: true }));
       elements.fixButton.addEventListener("click", () => fix({ dryRun: false }));
       elements.language.addEventListener("change", () => scan());
@@ -769,6 +795,34 @@ function htmlTemplate({ root, language }) {
           renderScan(result.after);
           renderChanges(result.changes, dryRun);
           setStatus(dryRun ? tr("preview") + "." : tr("applied"));
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function downloadReport() {
+        setBusy(true, tr("reporting"));
+        try {
+          const url = "/api/report?path=" + encodeURIComponent(elements.repoPath.value) + "&lang=" + encodeURIComponent(elements.language.value);
+          const response = await fetch(url);
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || "Erro inesperado.");
+          }
+
+          const blob = await response.blob();
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = downloadUrl;
+          link.download = fileNameFrom(response.headers.get("content-disposition")) || "repohealth-report.md";
+          document.body.append(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(downloadUrl);
+          setStatus(tr("downloaded"));
         } catch (error) {
           setError(error.message);
         } finally {
@@ -850,6 +904,7 @@ function htmlTemplate({ root, language }) {
 
       function setBusy(isBusy, message) {
         elements.scanButton.disabled = isBusy;
+        elements.reportButton.disabled = isBusy;
         elements.previewButton.disabled = isBusy;
         elements.fixButton.disabled = isBusy;
         if (message) {
@@ -870,6 +925,11 @@ function htmlTemplate({ root, language }) {
       function tr(key) {
         const lang = texts[elements.language.value] ? elements.language.value : "pt-BR";
         return texts[lang][key];
+      }
+
+      function fileNameFrom(contentDisposition) {
+        const match = /filename="([^"]+)"/.exec(contentDisposition || "");
+        return match ? match[1] : null;
       }
     </script>
   </body>

@@ -1,6 +1,6 @@
 {
   "name": "repohealth",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI e interface local para deixar repositórios mais claros, seguros e amigáveis para contribuição.",
   "type": "module",
   "bin": {
@@ -10,6 +10,7 @@
   "scripts": {
     "scan": "node ./src/cli.mjs scan",
     "fix": "node ./src/cli.mjs fix",
+    "report": "node ./src/cli.mjs report",
     "ui": "node ./src/cli.mjs ui",
     "test": "node --test test/*.test.mjs"
   },

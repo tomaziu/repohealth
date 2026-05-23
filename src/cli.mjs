@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { existsSync, statSync } from "node:fs";
+import { existsSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyFixes } from "./fix.mjs";
 import { DEFAULT_LANGUAGE, resolveLanguage, t } from "./i18n.mjs";
 import { printFixes, printHelp, printScan } from "./output.mjs";
+import { createReport } from "./report.mjs";
 import { scanRepository } from "./scan.mjs";
-import { startUiServer } from "./ui.mjs";
 
 if (isDirectRun()) {
   const { command, args } = parseCommand(process.argv.slice(2));
@@ -56,7 +56,23 @@ export async function main(command, args) {
     return;
   }
 
+  if (command === "report") {
+    const result = scanRepository(target, { lang: options.lang });
+    const report = createReport(result, { lang: options.lang });
+
+    if (options.output) {
+      const outputPath = path.resolve(options.output);
+      writeFileSync(outputPath, report, "utf8");
+      console.log(t(options.lang, "cli.report_written", { path: outputPath }));
+      return;
+    }
+
+    console.log(report);
+    return;
+  }
+
   if (command === "ui" || command === "gui") {
+    const { startUiServer } = await import("./ui.mjs");
     const server = await startUiServer({
       root: target,
       host: options.host,
@@ -98,6 +114,7 @@ function parseOptions(rawArgs) {
     host: "127.0.0.1",
     port: 4789,
     open: true,
+    output: null,
   };
 
   for (let index = 0; index < rawArgs.length; index += 1) {
@@ -115,6 +132,17 @@ function parseOptions(rawArgs) {
 
     if (arg === "--no-open") {
       options.open = false;
+      continue;
+    }
+
+    if (arg === "--output" || arg === "-o") {
+      options.output = rawArgs[index + 1];
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--output=")) {
+      options.output = arg.slice("--output=".length);
       continue;
     }
 

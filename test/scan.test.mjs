@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { parseCommand } from "../src/cli.mjs";
 import { applyFixes } from "../src/fix.mjs";
+import { createReport, reportFileName } from "../src/report.mjs";
 import { scanRepository } from "../src/scan.mjs";
 
 test("scanRepository reports a low score for an empty repository", () => {
@@ -89,6 +90,21 @@ test("scanRepository uses pt-BR by default and can switch to English", () => {
     assert.equal(pt.language, "pt-BR");
     assert.equal(pt.checks.find((check) => check.id === "license").title, "Licença");
     assert.equal(en.checks.find((check) => check.id === "license").title, "License");
+  } finally {
+    cleanup(repo);
+  }
+});
+
+test("createReport produces an AI-ready Markdown report", () => {
+  const repo = tempRepo();
+  try {
+    const result = scanRepository(repo);
+    const report = createReport(result);
+
+    assert.match(report, /^# Relatório RepoHealth/m);
+    assert.match(report, /## Prompt para IA/);
+    assert.match(report, /repohealth fix/);
+    assert.equal(reportFileName(repo).endsWith("-repohealth-report.md"), true);
   } finally {
     cleanup(repo);
   }

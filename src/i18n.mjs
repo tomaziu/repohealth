@@ -93,6 +93,7 @@ const DICTIONARY = {
     "cli.port_invalid": "--port must be an integer between 1 and 65535.",
     "cli.unknown_option": "Unknown option \"{option}\".",
     "cli.ui_started": "RepoHealth UI running at {url}",
+    "cli.report_written": "Report written to {path}",
     "action.created": "created",
     "action.would-create": "would-create",
     "action.skipped": "skipped",
@@ -106,6 +107,7 @@ const DICTIONARY = {
 Usage:
   repohealth scan [path] [--json] [--min-score <number>] [--lang pt-BR|en]
   repohealth fix [path] [--dry-run] [--json] [--lang pt-BR|en]
+  repohealth report [path] [--output <file>] [--lang pt-BR|en]
   repohealth ui [path] [--port <number>] [--no-open] [--lang pt-BR|en]
   repohealth help
   repohealth version
@@ -114,6 +116,7 @@ Examples:
   repohealth scan
   repohealth scan ../my-project --min-score 80
   repohealth fix --dry-run
+  repohealth report --output repohealth-report.md
   repohealth ui ../my-project
 `,
   },
@@ -166,6 +169,7 @@ Examples:
     "cli.port_invalid": "--port precisa ser um número inteiro entre 1 e 65535.",
     "cli.unknown_option": "Opção desconhecida \"{option}\".",
     "cli.ui_started": "Interface do RepoHealth rodando em {url}",
+    "cli.report_written": "Relatório salvo em {path}",
     "action.created": "criado",
     "action.would-create": "criaria",
     "action.skipped": "ignorado",
@@ -179,6 +183,7 @@ Examples:
 Uso:
   repohealth scan [caminho] [--json] [--min-score <número>] [--lang pt-BR|en]
   repohealth fix [caminho] [--dry-run] [--json] [--lang pt-BR|en]
+  repohealth report [caminho] [--output <arquivo>] [--lang pt-BR|en]
   repohealth ui [caminho] [--port <número>] [--no-open] [--lang pt-BR|en]
   repohealth help
   repohealth version
@@ -187,6 +192,7 @@ Exemplos:
   repohealth scan
   repohealth scan ../meu-projeto --min-score 80
   repohealth fix --dry-run
+  repohealth report --output repohealth-report.md
   repohealth ui ../meu-projeto
 `,
   },
