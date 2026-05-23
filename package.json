@@ -1,0 +1,44 @@
+{
+  "name": "repohealth",
+  "version": "0.2.0",
+  "description": "CLI e interface local para deixar repositórios mais claros, seguros e amigáveis para contribuição.",
+  "type": "module",
+  "bin": {
+    "repohealth": "./src/cli.mjs",
+    "repocare": "./src/cli.mjs"
+  },
+  "scripts": {
+    "scan": "node ./src/cli.mjs scan",
+    "fix": "node ./src/cli.mjs fix",
+    "ui": "node ./src/cli.mjs ui",
+    "test": "node --test test/*.test.mjs"
+  },
+  "keywords": [
+    "github",
+    "repohealth",
+    "repository",
+    "readme",
+    "maintainer",
+    "cli",
+    "open-source",
+    "developer-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomaziu/repohealth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tomaziu/repohealth/issues"
+  },
+  "homepage": "https://github.com/tomaziu/repohealth#readme"
+}
