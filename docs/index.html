@@ -39,7 +39,8 @@
       }
 
       button,
-      input {
+      input,
+      select {
         font: inherit;
       }
 
@@ -67,7 +68,18 @@
         background: #fff;
       }
 
+      select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        color: var(--ink);
+        background: #fff;
+      }
+
       input:focus,
+      select:focus,
       button:focus-visible {
         outline: 3px solid rgba(49, 95, 150, 0.25);
         outline-offset: 2px;
@@ -148,6 +160,24 @@
         grid-template-columns: minmax(0, 1fr) auto auto;
         align-items: end;
         gap: 10px;
+      }
+
+      .preset-row {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        align-items: end;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .preset-note {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: #fbfcfa;
+        color: var(--muted);
+        line-height: 1.45;
       }
 
       label {
@@ -401,6 +431,7 @@
         }
 
         .input-row,
+        .preset-row,
         .results {
           grid-template-columns: 1fr;
         }
@@ -442,6 +473,21 @@
           </label>
           <button class="primary" id="scanButton" type="button">Analisar</button>
           <button class="secondary" id="downloadButton" type="button" disabled>Baixar relatório</button>
+        </div>
+        <div class="preset-row">
+          <label>
+            Perfil de análise
+            <select id="presetSelect">
+              <option value="open-source">Open source</option>
+              <option value="essential">Essencial</option>
+              <option value="web-app">App web</option>
+              <option value="cli">CLI</option>
+              <option value="library">Biblioteca</option>
+              <option value="personal">Projeto pessoal</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </label>
+          <div class="preset-note" id="presetNote"></div>
         </div>
         <div class="status-line" id="statusLine"></div>
       </section>
@@ -525,8 +571,50 @@
         skip: "IGNORADO"
       };
 
+      const ALL_CHECK_IDS = Object.keys(WEIGHTS);
+
+      const PRESETS = {
+        "open-source": {
+          name: "Open source",
+          description: "Completo para projetos públicos que querem receber usuários, issues e contribuições.",
+          checks: ALL_CHECK_IDS
+        },
+        essential: {
+          name: "Essencial",
+          description: "O mínimo saudável para qualquer repositório público: documentação, licença, gitignore, testes e segurança.",
+          checks: ["readme", "license", "gitignore", "tests", "security", "changelog", "ai-ready"]
+        },
+        "web-app": {
+          name: "App web",
+          description: "Foco em README, metadados, CI, testes, ambiente e segurança para apps publicados.",
+          checks: ["readme", "license", "gitignore", "package-metadata", "ci", "tests", "security", "env-example", "changelog", "ai-ready"]
+        },
+        cli: {
+          name: "CLI",
+          description: "Foco em uso no terminal, pacote, testes, CI e onboarding para contribuidores.",
+          checks: ["readme", "license", "gitignore", "package-metadata", "contributing", "ci", "tests", "security", "changelog", "ai-ready"]
+        },
+        library: {
+          name: "Biblioteca",
+          description: "Foco em metadados, licença, testes, CI e contribuição para pacotes reutilizáveis.",
+          checks: ["readme", "license", "gitignore", "package-metadata", "contributing", "issue-templates", "pull-request-template", "ci", "tests", "security", "changelog", "ai-ready"]
+        },
+        personal: {
+          name: "Projeto pessoal",
+          description: "Mais leve para projetos pequenos ou portfólio, sem exigir fluxo completo de comunidade.",
+          checks: ["readme", "license", "gitignore", "tests", "changelog", "ai-ready"]
+        },
+        custom: {
+          name: "Personalizado",
+          description: "Você ajustou os checks manualmente. O relatório mostrará os itens fora da nota.",
+          checks: null
+        }
+      };
+
       const elements = {
         repoUrl: document.querySelector("#repoUrl"),
+        presetSelect: document.querySelector("#presetSelect"),
+        presetNote: document.querySelector("#presetNote"),
         scanButton: document.querySelector("#scanButton"),
         downloadButton: document.querySelector("#downloadButton"),
         statusLine: document.querySelector("#statusLine"),
@@ -549,15 +637,18 @@
       let latestFileName = "repohealth-report.md";
       let latestResult = null;
       let selectedCheckIds = new Set();
+      let activePresetId = "open-source";
 
       elements.scanButton.addEventListener("click", () => analyze());
       elements.downloadButton.addEventListener("click", () => downloadReport());
+      elements.presetSelect.addEventListener("change", () => applyPreset(elements.presetSelect.value));
       elements.repoUrl.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           analyze();
         }
       });
 
+      updatePresetNote();
       analyze();
 
       async function analyze() {
@@ -583,7 +674,7 @@
           });
 
           latestResult = result;
-          selectedCheckIds = new Set(result.checks.map((check) => check.id));
+          selectedCheckIds = checkSetForPreset(activePresetId, result.checks);
           latestFileName = `${source.owner}-${source.repo}-repohealth-report.md`;
 
           updateCustomizedView();
@@ -884,6 +975,37 @@
         };
       }
 
+      function applyPreset(presetId) {
+        activePresetId = presetId;
+        updatePresetNote();
+
+        if (!latestResult) {
+          return;
+        }
+
+        selectedCheckIds = checkSetForPreset(presetId, latestResult.checks);
+        updateCustomizedView();
+      }
+
+      function markCustomPreset() {
+        activePresetId = "custom";
+        elements.presetSelect.value = "custom";
+        updatePresetNote();
+      }
+
+      function checkSetForPreset(presetId, checks) {
+        const preset = PRESETS[presetId] || PRESETS["open-source"];
+        const checkIds = preset.checks || checks.map((check) => check.id);
+        const available = new Set(checks.map((check) => check.id));
+        return new Set(checkIds.filter((checkId) => available.has(checkId)));
+      }
+
+      function updatePresetNote() {
+        const preset = PRESETS[activePresetId] || PRESETS["open-source"];
+        elements.presetSelect.value = activePresetId;
+        elements.presetNote.textContent = preset.description;
+      }
+
       function updateCustomizedView() {
         if (!latestResult) return;
         const customized = customizeResult(latestResult);
@@ -919,6 +1041,7 @@
           standardGrade: result.grade,
           activeCheckCount: activeChecks.length,
           ignoredByUser,
+          preset: PRESETS[activePresetId]?.name || "Personalizado",
           summary: {
             pass: count(activeChecks, "pass"),
             warn: count(activeChecks, "warn"),
@@ -932,7 +1055,7 @@
         elements.scoreRing.style.setProperty("--score", result.score);
         elements.scoreNumber.textContent = String(result.score);
         elements.scoreGrade.textContent = `Nota ${result.grade}`;
-        elements.scoreDetail.textContent = `Padrão: ${result.standardScore}/100 (${result.standardGrade}) · Ativos: ${result.activeCheckCount}/${result.checks.length}`;
+        elements.scoreDetail.textContent = `${result.preset} · Padrão: ${result.standardScore}/100 (${result.standardGrade}) · Ativos: ${result.activeCheckCount}/${result.checks.length}`;
         elements.passCount.textContent = result.summary.pass;
         elements.warnCount.textContent = result.summary.warn;
         elements.failCount.textContent = result.summary.fail;
@@ -956,6 +1079,7 @@
           } else {
             selectedCheckIds.delete(check.id);
           }
+          markCustomPreset();
           updateCustomizedView();
         });
 
@@ -997,6 +1121,7 @@ Gerado em: ${new Date().toISOString()}
 
 - Repositório analisado: \`${result.root}\`
 - Branch analisada: \`${result.branch}\`
+- Perfil usado: **${result.preset}**
 - Nota personalizada: **${result.score}/100 (${result.grade})**
 - Nota padrão: **${result.standardScore}/100 (${result.standardGrade})**
 - Checks ativos: **${result.activeCheckCount}/${result.checks.length}**
@@ -1046,6 +1171,7 @@ Tenho um projeto com este relatório do RepoHealth:
 Nota personalizada: ${result.score}/100 (${result.grade})
 Nota padrão: ${result.standardScore}/100 (${result.standardGrade})
 Repositório: ${result.root}
+Perfil usado: ${result.preset}
 Falhas: ${result.summary.fail}
 Avisos: ${result.summary.warn}
 Checks desmarcados pelo usuário:
@@ -1094,6 +1220,8 @@ Se precisar alterar código, explique quais arquivos devem mudar e por quê.
         latestReport = "";
         latestResult = null;
         selectedCheckIds = new Set();
+        activePresetId = elements.presetSelect.value || "open-source";
+        updatePresetNote();
       }
 
       function downloadReport() {

@@ -25,6 +25,7 @@ Use o RepoHealth para:
 
 - App online para analisar repositórios públicos do GitHub por URL
 - Checks ajustáveis na versão online, com nota personalizada e nota padrão
+- Presets de análise para Open Source, Essencial, App Web, CLI, Biblioteca e Projeto Pessoal
 - Interface gráfica local com `repohealth ui`
 - CLI em português brasileiro por padrão
 - Suporte a inglês com `--lang en`
@@ -53,6 +54,8 @@ https://github.com/tomaziu/repohealth
 Depois pode baixar um relatório Markdown com prioridades, checks e um prompt pronto para pedir ajuda a uma IA.
 
 Os checks aparecem marcados por padrão. Se algum check não fizer sentido para o tipo de projeto, ele pode ser desmarcado; a página recalcula uma nota personalizada e mantém a nota padrão visível para comparação.
+
+Também existem presets de análise. Eles marcam automaticamente os checks mais relevantes para cada tipo de projeto, e qualquer ajuste manual vira um perfil personalizado.
 
 Para publicar no GitHub Pages:
 

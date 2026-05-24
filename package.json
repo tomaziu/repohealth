@@ -1,6 +1,6 @@
 {
   "name": "repohealth",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "App online, CLI e interface local para medir e melhorar a saúde de repositórios.",
   "type": "module",
   "bin": {
