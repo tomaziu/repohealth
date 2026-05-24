@@ -53,7 +53,7 @@ https://github.com/tomaziu/repohealth
 
 Depois pode baixar um relatório Markdown com prioridades, checks e um prompt pronto para pedir ajuda a uma IA.
 
-Os checks aparecem marcados por padrão. Se algum check não fizer sentido para o tipo de projeto, ele pode ser desmarcado; a página recalcula uma nota personalizada e mantém a nota padrão visível para comparação.
+Os checks aparecem marcados por padrão. Se algum check não fizer sentido para o tipo de projeto, ele pode ser desmarcado; a página recalcula uma nota personalizada e mantém a nota padrão visível para comparação. O relatório baixado inclui apenas os checks marcados.
 
 Também existem presets de análise. Eles marcam automaticamente os checks mais relevantes para cada tipo de projeto, e qualquer ajuste manual vira um perfil personalizado.
 

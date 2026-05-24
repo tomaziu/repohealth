@@ -606,7 +606,7 @@
         },
         custom: {
           name: "Personalizado",
-          description: "Você ajustou os checks manualmente. O relatório mostrará os itens fora da nota.",
+          description: "Você ajustou os checks manualmente. O relatório incluirá apenas os checks marcados.",
           checks: null
         }
       };
@@ -1106,7 +1106,6 @@
 
       function createReport(result) {
         const activeChecks = result.checks.filter((check) => check.enabled !== false);
-        const ignoredByUser = result.ignoredByUser || result.checks.filter((check) => check.enabled === false);
         const failures = activeChecks.filter((check) => check.status === "fail");
         const warnings = activeChecks.filter((check) => check.status === "warn");
         const skipped = activeChecks.filter((check) => check.status === "skip");
@@ -1125,7 +1124,6 @@ Gerado em: ${new Date().toISOString()}
 - Nota personalizada: **${result.score}/100 (${result.grade})**
 - Nota padrão: **${result.standardScore}/100 (${result.standardGrade})**
 - Checks ativos: **${result.activeCheckCount}/${result.checks.length}**
-- Checks desmarcados pelo usuário: **${ignoredByUser.length}**
 - Checks OK: **${result.summary.pass}**
 - Avisos: **${result.summary.warn}**
 - Falhas: **${result.summary.fail}**
@@ -1149,11 +1147,7 @@ ${safeFiles.length > 0 ? safeFiles.map((file) => `- \`${file}\``).join("\n") : "
 
 | Status | Check | Mensagem |
 | --- | --- | --- |
-${result.checks.map((check) => `| ${check.enabled === false ? "FORA DA NOTA" : STATUS_LABELS[check.status]} | ${escapeTable(check.title)} | ${escapeTable(check.message)} |`).join("\n")}
-
-## Checks desmarcados pelo usuário
-
-${ignoredByUser.length > 0 ? ignoredByUser.map((check) => `- **${check.title}:** não entrou na nota personalizada.`).join("\n") : "Nenhum check foi desmarcado pelo usuário."}
+${activeChecks.map((check) => `| ${STATUS_LABELS[check.status]} | ${escapeTable(check.title)} | ${escapeTable(check.message)} |`).join("\n")}
 
 ## Checks ignorados pelo RepoHealth
 
@@ -1174,8 +1168,6 @@ Repositório: ${result.root}
 Perfil usado: ${result.preset}
 Falhas: ${result.summary.fail}
 Avisos: ${result.summary.warn}
-Checks desmarcados pelo usuário:
-${ignoredByUser.length > 0 ? ignoredByUser.map((check) => `- ${check.title}`).join("\n") : "- Nenhum"}
 
 Principais pontos para melhorar:
 ${improvements.length > 0 ? improvements.map((check) => `- ${check.title}: ${check.message}`).join("\n") : "- Nenhum ponto crítico encontrado. Sugira melhorias finas de documentação, testes e onboarding."}

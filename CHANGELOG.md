@@ -2,6 +2,10 @@
 
 Todas as mudanças relevantes do RepoHealth serão documentadas neste arquivo.
 
+## 0.6.1
+
+- Relatório online passa a listar apenas os checks marcados pelo usuário.
+
 ## 0.6.0
 
 - Presets de análise na versão online.
