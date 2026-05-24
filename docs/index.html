@@ -232,6 +232,15 @@
         font-weight: 800;
       }
 
+      .score-detail {
+        min-height: 18px;
+        margin: -4px 0 14px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+      }
+
       .summary-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -287,9 +296,26 @@
         min-height: 74px;
         padding: 14px 16px;
         display: grid;
-        grid-template-columns: 92px minmax(0, 1fr);
+        grid-template-columns: 28px 92px minmax(0, 1fr);
         gap: 12px;
         border-bottom: 1px solid var(--line);
+      }
+
+      .check.is-disabled {
+        background: #fafbf9;
+      }
+
+      .check.is-disabled h3,
+      .check.is-disabled p {
+        opacity: 0.62;
+      }
+
+      .check-toggle {
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        margin-top: 5px;
+        accent-color: var(--green);
       }
 
       .check:last-child {
@@ -326,6 +352,11 @@
       .badge.skip {
         background: var(--blue-soft);
         color: var(--blue);
+      }
+
+      .badge.off {
+        background: #edf0ed;
+        color: var(--muted);
       }
 
       .check h3 {
@@ -425,6 +456,7 @@
               </div>
             </div>
           </div>
+          <div class="score-detail" id="scoreDetail"></div>
           <div class="summary-grid">
             <div class="summary-item"><strong id="passCount">0</strong><span>OK</span></div>
             <div class="summary-item"><strong id="warnCount">0</strong><span>Avisos</span></div>
@@ -501,6 +533,7 @@
         scoreRing: document.querySelector("#scoreRing"),
         scoreNumber: document.querySelector("#scoreNumber"),
         scoreGrade: document.querySelector("#scoreGrade"),
+        scoreDetail: document.querySelector("#scoreDetail"),
         passCount: document.querySelector("#passCount"),
         warnCount: document.querySelector("#warnCount"),
         failCount: document.querySelector("#failCount"),
@@ -514,6 +547,8 @@
 
       let latestReport = "";
       let latestFileName = "repohealth-report.md";
+      let latestResult = null;
+      let selectedCheckIds = new Set();
 
       elements.scanButton.addEventListener("click", () => analyze());
       elements.downloadButton.addEventListener("click", () => downloadReport());
@@ -547,12 +582,11 @@
             packageText
           });
 
-          latestReport = createReport(result);
+          latestResult = result;
+          selectedCheckIds = new Set(result.checks.map((check) => check.id));
           latestFileName = `${source.owner}-${source.repo}-repohealth-report.md`;
 
-          renderResult(result);
-          renderReport(result);
-          elements.downloadButton.disabled = false;
+          updateCustomizedView();
           setStatus("Pronto.");
         } catch (error) {
           setError(error.message);
@@ -850,10 +884,55 @@
         };
       }
 
+      function updateCustomizedView() {
+        if (!latestResult) return;
+        const customized = customizeResult(latestResult);
+        latestReport = createReport(customized);
+        renderResult(customized);
+        renderReport(customized);
+        elements.downloadButton.disabled = false;
+      }
+
+      function customizeResult(result) {
+        const checks = result.checks.map((check) => ({
+          ...check,
+          enabled: selectedCheckIds.has(check.id)
+        }));
+        const activeChecks = checks.filter((check) => check.enabled);
+        const ignoredByUser = checks.filter((check) => !check.enabled);
+        const totalWeight = activeChecks
+          .filter((check) => check.status !== "skip")
+          .reduce((sum, check) => sum + check.weight, 0);
+        const earnedWeight = activeChecks.reduce((sum, check) => {
+          if (check.status === "pass") return sum + check.weight;
+          if (check.status === "warn") return sum + check.weight * 0.5;
+          return sum;
+        }, 0);
+        const score = totalWeight === 0 ? 0 : Math.round((earnedWeight / totalWeight) * 100);
+
+        return {
+          ...result,
+          checks,
+          score,
+          grade: grade(score),
+          standardScore: result.score,
+          standardGrade: result.grade,
+          activeCheckCount: activeChecks.length,
+          ignoredByUser,
+          summary: {
+            pass: count(activeChecks, "pass"),
+            warn: count(activeChecks, "warn"),
+            fail: count(activeChecks, "fail"),
+            skip: count(activeChecks, "skip")
+          }
+        };
+      }
+
       function renderResult(result) {
         elements.scoreRing.style.setProperty("--score", result.score);
         elements.scoreNumber.textContent = String(result.score);
         elements.scoreGrade.textContent = `Nota ${result.grade}`;
+        elements.scoreDetail.textContent = `Padrão: ${result.standardScore}/100 (${result.standardGrade}) · Ativos: ${result.activeCheckCount}/${result.checks.length}`;
         elements.passCount.textContent = result.summary.pass;
         elements.warnCount.textContent = result.summary.warn;
         elements.failCount.textContent = result.summary.fail;
@@ -864,11 +943,25 @@
 
       function renderCheck(check) {
         const row = document.createElement("article");
-        row.className = "check";
+        row.className = check.enabled ? "check" : "check is-disabled";
+
+        const toggle = document.createElement("input");
+        toggle.type = "checkbox";
+        toggle.className = "check-toggle";
+        toggle.checked = check.enabled;
+        toggle.setAttribute("aria-label", `Usar check ${check.title}`);
+        toggle.addEventListener("change", () => {
+          if (toggle.checked) {
+            selectedCheckIds.add(check.id);
+          } else {
+            selectedCheckIds.delete(check.id);
+          }
+          updateCustomizedView();
+        });
 
         const badge = document.createElement("span");
-        badge.className = `badge ${check.status}`;
-        badge.textContent = STATUS_LABELS[check.status];
+        badge.className = check.enabled ? `badge ${check.status}` : "badge off";
+        badge.textContent = check.enabled ? STATUS_LABELS[check.status] : "FORA";
 
         const content = document.createElement("div");
         const title = document.createElement("h3");
@@ -877,7 +970,7 @@
         message.textContent = check.message;
 
         content.append(title, message);
-        row.append(badge, content);
+        row.append(toggle, badge, content);
         return row;
       }
 
@@ -888,9 +981,11 @@
       }
 
       function createReport(result) {
-        const failures = result.checks.filter((check) => check.status === "fail");
-        const warnings = result.checks.filter((check) => check.status === "warn");
-        const skipped = result.checks.filter((check) => check.status === "skip");
+        const activeChecks = result.checks.filter((check) => check.enabled !== false);
+        const ignoredByUser = result.ignoredByUser || result.checks.filter((check) => check.enabled === false);
+        const failures = activeChecks.filter((check) => check.status === "fail");
+        const warnings = activeChecks.filter((check) => check.status === "warn");
+        const skipped = activeChecks.filter((check) => check.status === "skip");
         const improvements = [...failures, ...warnings];
         const safeFiles = filesFor(improvements);
 
@@ -902,7 +997,10 @@ Gerado em: ${new Date().toISOString()}
 
 - Repositório analisado: \`${result.root}\`
 - Branch analisada: \`${result.branch}\`
-- Nota: **${result.score}/100 (${result.grade})**
+- Nota personalizada: **${result.score}/100 (${result.grade})**
+- Nota padrão: **${result.standardScore}/100 (${result.standardGrade})**
+- Checks ativos: **${result.activeCheckCount}/${result.checks.length}**
+- Checks desmarcados pelo usuário: **${ignoredByUser.length}**
 - Checks OK: **${result.summary.pass}**
 - Avisos: **${result.summary.warn}**
 - Falhas: **${result.summary.fail}**
@@ -926,9 +1024,13 @@ ${safeFiles.length > 0 ? safeFiles.map((file) => `- \`${file}\``).join("\n") : "
 
 | Status | Check | Mensagem |
 | --- | --- | --- |
-${result.checks.map((check) => `| ${STATUS_LABELS[check.status]} | ${escapeTable(check.title)} | ${escapeTable(check.message)} |`).join("\n")}
+${result.checks.map((check) => `| ${check.enabled === false ? "FORA DA NOTA" : STATUS_LABELS[check.status]} | ${escapeTable(check.title)} | ${escapeTable(check.message)} |`).join("\n")}
 
-## Checks ignorados
+## Checks desmarcados pelo usuário
+
+${ignoredByUser.length > 0 ? ignoredByUser.map((check) => `- **${check.title}:** não entrou na nota personalizada.`).join("\n") : "Nenhum check foi desmarcado pelo usuário."}
+
+## Checks ignorados pelo RepoHealth
 
 ${skipped.length > 0 ? skipped.map((check) => `- **${check.title}:** ${check.message}`).join("\n") : "Nenhum check foi ignorado."}
 
@@ -941,10 +1043,13 @@ Atue como uma pessoa especialista em open source, documentação e qualidade de 
 
 Tenho um projeto com este relatório do RepoHealth:
 
-Nota: ${result.score}/100 (${result.grade})
+Nota personalizada: ${result.score}/100 (${result.grade})
+Nota padrão: ${result.standardScore}/100 (${result.standardGrade})
 Repositório: ${result.root}
 Falhas: ${result.summary.fail}
 Avisos: ${result.summary.warn}
+Checks desmarcados pelo usuário:
+${ignoredByUser.length > 0 ? ignoredByUser.map((check) => `- ${check.title}`).join("\n") : "- Nenhum"}
 
 Principais pontos para melhorar:
 ${improvements.length > 0 ? improvements.map((check) => `- ${check.title}: ${check.message}`).join("\n") : "- Nenhum ponto crítico encontrado. Sugira melhorias finas de documentação, testes e onboarding."}
@@ -978,6 +1083,7 @@ Se precisar alterar código, explique quais arquivos devem mudar e por quê.
         elements.scoreRing.style.setProperty("--score", 0);
         elements.scoreNumber.textContent = "--";
         elements.scoreGrade.textContent = "Nota --";
+        elements.scoreDetail.textContent = "";
         elements.passCount.textContent = "0";
         elements.warnCount.textContent = "0";
         elements.failCount.textContent = "0";
@@ -986,6 +1092,8 @@ Se precisar alterar código, explique quais arquivos devem mudar e por quê.
         elements.checksList.replaceChildren();
         elements.reportPanel.hidden = true;
         latestReport = "";
+        latestResult = null;
+        selectedCheckIds = new Set();
       }
 
       function downloadReport() {

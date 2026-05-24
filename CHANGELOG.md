@@ -2,6 +2,12 @@
 
 Todas as mudanças relevantes do RepoHealth serão documentadas neste arquivo.
 
+## 0.5.0
+
+- Checks selecionáveis na versão online.
+- Nota personalizada recalculada ao marcar ou desmarcar checks.
+- Relatório Markdown informa checks desmarcados pelo usuário.
+
 ## 0.4.0
 
 - App web 100% online em `docs/index.html`.
