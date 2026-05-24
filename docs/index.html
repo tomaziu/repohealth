@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RepoHealth Online</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f4;
+        --ink: #17201b;
+        --muted: #65736b;
+        --panel: #ffffff;
+        --panel-soft: #eef4f1;
+        --line: #d8ded9;
+        --green: #1f7a4d;
+        --green-soft: #dff1e8;
+        --amber: #ad6a00;
+        --amber-soft: #fff1d7;
+        --red: #b33a3a;
+        --red-soft: #fde4e1;
+        --blue: #315f96;
+        --blue-soft: #e3eef9;
+        --shadow: 0 18px 50px rgba(23, 32, 27, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 15px;
+        letter-spacing: 0;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        min-height: 42px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 0 14px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        color: var(--ink);
+        background: #fff;
+      }
+
+      input:focus,
+      button:focus-visible {
+        outline: 3px solid rgba(49, 95, 150, 0.25);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        background: #17201b;
+        color: #f8faf7;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .topbar-inner {
+        max-width: 1180px;
+        min-height: 68px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #78c78f, #d8b45c);
+        display: grid;
+        place-items: center;
+        color: #17201b;
+        font-weight: 900;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .brand small {
+        display: block;
+        margin-top: 4px;
+        color: #b8c5bd;
+        font-size: 12px;
+      }
+
+      .toplink {
+        color: #e7f0ea;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-weight: 700;
+      }
+
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 24px 48px;
+      }
+
+      .workspace {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .input-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: end;
+        gap: 10px;
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .primary {
+        background: var(--green);
+        color: #fff;
+      }
+
+      .secondary {
+        background: var(--blue-soft);
+        color: #173f69;
+        border-color: #c5d8ea;
+      }
+
+      .status-line {
+        min-height: 22px;
+        margin-top: 12px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .status-line.error {
+        color: var(--red);
+      }
+
+      .results {
+        display: grid;
+        grid-template-columns: 290px minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+        margin-top: 18px;
+      }
+
+      .score-panel,
+      .checks-panel,
+      .report-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .score-panel {
+        padding: 18px;
+      }
+
+      .score-ring {
+        width: 176px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        margin: 4px auto 16px;
+        display: grid;
+        place-items: center;
+        background: conic-gradient(var(--green) calc(var(--score, 0) * 1%), #e3e8e4 0);
+      }
+
+      .score-ring-inner {
+        width: 126px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid var(--line);
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      .score-number {
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .score-grade {
+        margin-top: 6px;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .summary-item {
+        min-height: 70px;
+        border-radius: 8px;
+        padding: 10px;
+        background: var(--panel-soft);
+      }
+
+      .summary-item strong {
+        display: block;
+        font-size: 22px;
+      }
+
+      .summary-item span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .checks-panel header,
+      .report-panel header {
+        min-height: 54px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .checks-panel h2,
+      .report-panel h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .repo-meta {
+        color: var(--muted);
+        overflow-wrap: anywhere;
+        text-align: right;
+      }
+
+      .checks-list {
+        display: grid;
+      }
+
+      .check {
+        min-height: 74px;
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .check:last-child {
+        border-bottom: 0;
+      }
+
+      .badge {
+        align-self: start;
+        min-height: 28px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .badge.pass {
+        background: var(--green-soft);
+        color: var(--green);
+      }
+
+      .badge.warn {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .badge.fail {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+
+      .badge.skip {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .check h3 {
+        margin: 0 0 6px;
+        font-size: 15px;
+      }
+
+      .check p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .report-panel {
+        margin-top: 18px;
+        overflow: hidden;
+      }
+
+      .report-body {
+        padding: 16px;
+      }
+
+      .report-body textarea {
+        width: 100%;
+        min-height: 260px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        font: 13px ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        line-height: 1.5;
+        color: var(--ink);
+        background: #fbfcfa;
+      }
+
+      @media (max-width: 900px) {
+        .topbar-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          padding-top: 16px;
+          padding-bottom: 16px;
+        }
+
+        .input-row,
+        .results {
+          grid-template-columns: 1fr;
+        }
+
+        .input-row button {
+          width: 100%;
+        }
+
+        .check {
+          grid-template-columns: 1fr;
+        }
+
+        .repo-meta {
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">R</div>
+          <div>
+            <h1>RepoHealth Online</h1>
+            <small>Saúde de repositórios GitHub</small>
+          </div>
+        </div>
+        <a class="toplink" href="https://github.com/tomaziu/repohealth" rel="noreferrer">GitHub</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="workspace">
+        <div class="input-row">
+          <label>
+            Repositório GitHub
+            <input id="repoUrl" value="https://github.com/tomaziu/repohealth" autocomplete="off">
+          </label>
+          <button class="primary" id="scanButton" type="button">Analisar</button>
+          <button class="secondary" id="downloadButton" type="button" disabled>Baixar relatório</button>
+        </div>
+        <div class="status-line" id="statusLine"></div>
+      </section>
+
+      <section class="results" aria-live="polite">
+        <aside class="score-panel">
+          <div class="score-ring" id="scoreRing">
+            <div class="score-ring-inner">
+              <div>
+                <div class="score-number" id="scoreNumber">--</div>
+                <div class="score-grade" id="scoreGrade">Nota --</div>
+              </div>
+            </div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-item"><strong id="passCount">0</strong><span>OK</span></div>
+            <div class="summary-item"><strong id="warnCount">0</strong><span>Avisos</span></div>
+            <div class="summary-item"><strong id="failCount">0</strong><span>Falhas</span></div>
+            <div class="summary-item"><strong id="skipCount">0</strong><span>Ignorados</span></div>
+          </div>
+        </aside>
+
+        <section class="checks-panel">
+          <header>
+            <h2>Checks</h2>
+            <span class="repo-meta" id="repoMeta"></span>
+          </header>
+          <div class="checks-list" id="checksList"></div>
+        </section>
+      </section>
+
+      <section class="report-panel" id="reportPanel" hidden>
+        <header>
+          <h2>Relatório</h2>
+          <span class="repo-meta" id="reportName"></span>
+        </header>
+        <div class="report-body">
+          <textarea id="reportText" readonly></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const WEIGHTS = {
+        readme: 16,
+        license: 10,
+        gitignore: 8,
+        "package-metadata": 8,
+        contributing: 7,
+        "issue-templates": 7,
+        "pull-request-template": 7,
+        ci: 9,
+        tests: 10,
+        security: 6,
+        "env-example": 5,
+        changelog: 4,
+        "ai-ready": 3
+      };
+
+      const CHECK_TITLES = {
+        readme: "README",
+        license: "Licença",
+        gitignore: ".gitignore",
+        "package-metadata": "Metadados do pacote",
+        contributing: "Guia de contribuição",
+        "issue-templates": "Templates de issue",
+        "pull-request-template": "Template de pull request",
+        ci: "Integração contínua",
+        tests: "Testes",
+        security: "Política de segurança",
+        "env-example": "Exemplo de ambiente",
+        changelog: "Changelog",
+        "ai-ready": "Instruções para IA"
+      };
+
+      const STATUS_LABELS = {
+        pass: "OK",
+        warn: "AVISO",
+        fail: "FALHA",
+        skip: "IGNORADO"
+      };
+
+      const elements = {
+        repoUrl: document.querySelector("#repoUrl"),
+        scanButton: document.querySelector("#scanButton"),
+        downloadButton: document.querySelector("#downloadButton"),
+        statusLine: document.querySelector("#statusLine"),
+        scoreRing: document.querySelector("#scoreRing"),
+        scoreNumber: document.querySelector("#scoreNumber"),
+        scoreGrade: document.querySelector("#scoreGrade"),
+        passCount: document.querySelector("#passCount"),
+        warnCount: document.querySelector("#warnCount"),
+        failCount: document.querySelector("#failCount"),
+        skipCount: document.querySelector("#skipCount"),
+        checksList: document.querySelector("#checksList"),
+        repoMeta: document.querySelector("#repoMeta"),
+        reportPanel: document.querySelector("#reportPanel"),
+        reportText: document.querySelector("#reportText"),
+        reportName: document.querySelector("#reportName")
+      };
+
+      let latestReport = "";
+      let latestFileName = "repohealth-report.md";
+
+      elements.scanButton.addEventListener("click", () => analyze());
+      elements.downloadButton.addEventListener("click", () => downloadReport());
+      elements.repoUrl.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          analyze();
+        }
+      });
+
+      analyze();
+
+      async function analyze() {
+        setBusy(true, "Analisando repositório...");
+        setError("");
+        elements.downloadButton.disabled = true;
+
+        try {
+          const source = parseGitHubUrl(elements.repoUrl.value);
+          const repo = await fetchRepo(source);
+          const tree = await fetchTree(source.owner, source.repo, repo.default_branch);
+          const files = normalizeTree(tree.tree || []);
+          const readmePath = firstPath(files, ["README.md", "readme.md"]);
+          const packagePath = firstPath(files, ["package.json"]);
+          const readme = readmePath ? await fetchContent(source.owner, source.repo, readmePath, repo.default_branch) : "";
+          const packageText = packagePath ? await fetchContent(source.owner, source.repo, packagePath, repo.default_branch) : "";
+          const result = scanOnlineRepository({
+            source,
+            repo,
+            files,
+            readme,
+            packageText
+          });
+
+          latestReport = createReport(result);
+          latestFileName = `${source.owner}-${source.repo}-repohealth-report.md`;
+
+          renderResult(result);
+          renderReport(result);
+          elements.downloadButton.disabled = false;
+          setStatus("Pronto.");
+        } catch (error) {
+          setError(error.message);
+          resetResult();
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      function scanOnlineRepository(context) {
+        const checks = [
+          checkReadme(context),
+          checkLicense(context),
+          checkGitignore(context),
+          checkPackageMetadata(context),
+          checkContributing(context),
+          checkIssueTemplates(context),
+          checkPullRequestTemplate(context),
+          checkCi(context),
+          checkTests(context),
+          checkSecurity(context),
+          checkEnvExample(context),
+          checkChangelog(context),
+          checkAiReady(context)
+        ];
+
+        const totalWeight = checks
+          .filter((check) => check.status !== "skip")
+          .reduce((sum, check) => sum + check.weight, 0);
+
+        const earnedWeight = checks.reduce((sum, check) => {
+          if (check.status === "pass") return sum + check.weight;
+          if (check.status === "warn") return sum + check.weight * 0.5;
+          return sum;
+        }, 0);
+
+        const score = totalWeight === 0 ? 0 : Math.round((earnedWeight / totalWeight) * 100);
+
+        return {
+          root: `https://github.com/${context.source.owner}/${context.source.repo}`,
+          branch: context.repo.default_branch,
+          score,
+          grade: grade(score),
+          checks,
+          summary: {
+            pass: count(checks, "pass"),
+            warn: count(checks, "warn"),
+            fail: count(checks, "fail"),
+            skip: count(checks, "skip")
+          }
+        };
+      }
+
+      function checkReadme({ readme }) {
+        if (!readme) {
+          return fail("readme", "Adicione um README.md explicando o que o projeto faz, como instalar e como usar.");
+        }
+
+        const sections = [
+          hasHeading(readme, ["installation", "install", "instalacao", "instalação"]),
+          hasHeading(readme, ["usage", "quick start", "uso", "como usar"]),
+          hasHeading(readme, ["contributing", "contribuicao", "contribuição"])
+        ].filter(Boolean).length;
+
+        if (readme.trim().length < 300) {
+          return warn("readme", "README.md existe, mas está muito curto. Adicione instalação, uso, exemplos e contribuição.");
+        }
+
+        if (sections < 2) {
+          return warn("readme", "README.md existe, mas faltam seções comuns como instalação, uso ou contribuição.");
+        }
+
+        return pass("readme", "README.md está presente e tem informação suficiente.");
+      }
+
+      function checkLicense({ files }) {
+        return hasAny(files, ["LICENSE", "LICENSE.md", "license", "license.md"])
+          ? pass("license", "Um arquivo de licença está presente.")
+          : fail("license", "Adicione uma licença para as pessoas saberem como podem usar seu projeto.");
+      }
+
+      function checkGitignore({ files }) {
+        return hasAny(files, [".gitignore"])
+          ? pass("gitignore", ".gitignore está presente.")
+          : fail("gitignore", "Adicione um .gitignore para evitar arquivos gerados, segredos e ruído local no Git.");
+      }
+
+      function checkPackageMetadata({ packageText }) {
+        if (!packageText) {
+          return skip("package-metadata", "Nenhum package.json encontrado. Este check vale para pacotes JavaScript e TypeScript.");
+        }
+
+        try {
+          const pkg = JSON.parse(packageText);
+          const missing = ["name", "description", "license", "repository"].filter((key) => !pkg[key]);
+          return missing.length === 0
+            ? pass("package-metadata", "package.json inclui os metadados principais de publicação.")
+            : warn("package-metadata", `package.json está sem: ${missing.join(", ")}.`);
+        } catch {
+          return fail("package-metadata", "Não foi possível ler o package.json.");
+        }
+      }
+
+      function checkContributing({ files }) {
+        return hasAny(files, ["CONTRIBUTING.md", ".github/CONTRIBUTING.md"])
+          ? pass("contributing", "Um guia de contribuição está presente.")
+          : fail("contributing", "Adicione CONTRIBUTING.md para novos contribuidores saberem como ajudar.");
+      }
+
+      function checkIssueTemplates({ files }) {
+        const templates = files.filter((file) => /^\.github\/ISSUE_TEMPLATE\/.+\.(md|ya?ml)$/i.test(file.path));
+        return templates.length > 0
+          ? pass("issue-templates", "Templates de issue estão presentes.")
+          : fail("issue-templates", "Adicione templates de issue para bugs e pedidos de melhoria.");
+      }
+
+      function checkPullRequestTemplate({ files }) {
+        return hasAny(files, [".github/PULL_REQUEST_TEMPLATE.md", ".github/pull_request_template.md", "PULL_REQUEST_TEMPLATE.md"])
+          ? pass("pull-request-template", "Um template de pull request está presente.")
+          : fail("pull-request-template", "Adicione um template de pull request para facilitar revisões.");
+      }
+
+      function checkCi({ files }) {
+        const workflows = files.filter((file) => /^\.github\/workflows\/.+\.(yml|yaml)$/i.test(file.path));
+        return workflows.length > 0
+          ? pass("ci", "Pelo menos um workflow do GitHub Actions está presente.")
+          : fail("ci", "Adicione um workflow do GitHub Actions ou outra configuração de CI.");
+      }
+
+      function checkTests({ files, packageText }) {
+        if (packageText) {
+          try {
+            const pkg = JSON.parse(packageText);
+            const testScript = pkg.scripts && pkg.scripts.test;
+            if (testScript && !/no test|echo/i.test(testScript)) {
+              return pass("tests", "Um script de teste está definido no package.json.");
+            }
+          } catch {
+            return fail("tests", "Não foi possível ler o package.json para verificar testes.");
+          }
+        }
+
+        const hasTestDir = files.some((file) => /(^|\/)(test|tests|__tests__)(\/|$)/i.test(file.path));
+        const hasTestFiles = files.some((file) => /\.(test|spec)\.[cm]?[jt]sx?$/i.test(file.path));
+        return hasTestDir || hasTestFiles
+          ? pass("tests", "Arquivos ou pastas de teste estão presentes.")
+          : fail("tests", "Adicione testes ou um script de teste para aumentar a confiança nas mudanças.");
+      }
+
+      function checkSecurity({ files }) {
+        return hasAny(files, ["SECURITY.md", ".github/SECURITY.md"])
+          ? pass("security", "Uma política de segurança está presente.")
+          : fail("security", "Adicione SECURITY.md para as pessoas saberem como reportar vulnerabilidades com cuidado.");
+      }
+
+      function checkEnvExample({ files }) {
+        const hasEnv = hasAny(files, [".env"]);
+        const hasExample = hasAny(files, [".env.example", ".env.sample"]);
+        if (!hasEnv && !hasExample) {
+          return skip("env-example", "Nenhum .env detectado. Adicione .env.example se o projeto usa variáveis de ambiente.");
+        }
+
+        return hasExample
+          ? pass("env-example", ".env.example está presente.")
+          : fail("env-example", "Existe um .env, mas falta .env.example.");
+      }
+
+      function checkChangelog({ files }) {
+        return hasAny(files, ["CHANGELOG.md", "HISTORY.md", "RELEASES.md"])
+          ? pass("changelog", "Um changelog está presente.")
+          : warn("changelog", "Adicione CHANGELOG.md quando o projeto começar a publicar versões.");
+      }
+
+      function checkAiReady({ files }) {
+        return hasAny(files, ["AGENTS.md", "CLAUDE.md", ".cursorrules", ".github/copilot-instructions.md"])
+          ? pass("ai-ready", "Instruções para contribuidores com IA estão presentes.")
+          : warn("ai-ready", "Adicione AGENTS.md ou instruções parecidas para ferramentas de IA entenderem o projeto.");
+      }
+
+      async function fetchRepo(source) {
+        return requestGitHub(`https://api.github.com/repos/${source.owner}/${source.repo}`);
+      }
+
+      async function fetchTree(owner, repo, branch) {
+        return requestGitHub(`https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
+      }
+
+      async function fetchContent(owner, repo, filePath, branch) {
+        const data = await requestGitHub(`https://api.github.com/repos/${owner}/${repo}/contents/${encodePath(filePath)}?ref=${encodeURIComponent(branch)}`);
+        if (!data.content) return "";
+        return decodeBase64(data.content);
+      }
+
+      async function requestGitHub(url) {
+        const response = await fetch(url, {
+          headers: {
+            accept: "application/vnd.github+json"
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Repositório ou arquivo não encontrado.");
+          }
+
+          if (response.status === 403) {
+            throw new Error("Limite temporário da API do GitHub atingido. Tente novamente mais tarde.");
+          }
+
+          throw new Error(`GitHub respondeu com erro ${response.status}.`);
+        }
+
+        return response.json();
+      }
+
+      function parseGitHubUrl(value) {
+        const trimmed = value.trim();
+        const shorthand = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)$/.exec(trimmed);
+        if (shorthand) {
+          return { owner: shorthand[1], repo: shorthand[2].replace(/\.git$/, "") };
+        }
+
+        let url;
+        try {
+          url = new URL(trimmed);
+        } catch {
+          throw new Error("Informe uma URL do GitHub válida.");
+        }
+
+        if (url.hostname !== "github.com" && url.hostname !== "www.github.com") {
+          throw new Error("Use uma URL de repositório do GitHub.");
+        }
+
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts.length < 2) {
+          throw new Error("A URL precisa conter dono e nome do repositório.");
+        }
+
+        return {
+          owner: parts[0],
+          repo: parts[1].replace(/\.git$/, "")
+        };
+      }
+
+      function normalizeTree(tree) {
+        return tree
+          .filter((item) => item.type === "blob")
+          .map((item) => ({
+            path: item.path,
+            lowerPath: item.path.toLowerCase()
+          }));
+      }
+
+      function firstPath(files, candidates) {
+        const lowered = candidates.map((candidate) => candidate.toLowerCase());
+        const match = files.find((file) => lowered.includes(file.lowerPath));
+        return match ? match.path : null;
+      }
+
+      function hasAny(files, candidates) {
+        const lowered = new Set(candidates.map((candidate) => candidate.toLowerCase()));
+        return files.some((file) => lowered.has(file.lowerPath));
+      }
+
+      function hasHeading(content, headings) {
+        return headings.some((heading) => {
+          const expression = new RegExp(`^#{1,6}\\s+.*\\b${escapeRegExp(heading)}\\b`, "im");
+          return expression.test(content);
+        });
+      }
+
+      function pass(id, message) {
+        return check(id, "pass", message);
+      }
+
+      function warn(id, message) {
+        return check(id, "warn", message);
+      }
+
+      function fail(id, message) {
+        return check(id, "fail", message);
+      }
+
+      function skip(id, message) {
+        return check(id, "skip", message);
+      }
+
+      function check(id, status, message) {
+        return {
+          id,
+          title: CHECK_TITLES[id],
+          weight: WEIGHTS[id],
+          status,
+          message
+        };
+      }
+
+      function renderResult(result) {
+        elements.scoreRing.style.setProperty("--score", result.score);
+        elements.scoreNumber.textContent = String(result.score);
+        elements.scoreGrade.textContent = `Nota ${result.grade}`;
+        elements.passCount.textContent = result.summary.pass;
+        elements.warnCount.textContent = result.summary.warn;
+        elements.failCount.textContent = result.summary.fail;
+        elements.skipCount.textContent = result.summary.skip;
+        elements.repoMeta.textContent = `${result.root} · ${result.branch}`;
+        elements.checksList.replaceChildren(...result.checks.map(renderCheck));
+      }
+
+      function renderCheck(check) {
+        const row = document.createElement("article");
+        row.className = "check";
+
+        const badge = document.createElement("span");
+        badge.className = `badge ${check.status}`;
+        badge.textContent = STATUS_LABELS[check.status];
+
+        const content = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = check.title;
+        const message = document.createElement("p");
+        message.textContent = check.message;
+
+        content.append(title, message);
+        row.append(badge, content);
+        return row;
+      }
+
+      function renderReport(result) {
+        elements.reportPanel.hidden = false;
+        elements.reportText.value = latestReport;
+        elements.reportName.textContent = `${result.score}/100`;
+      }
+
+      function createReport(result) {
+        const failures = result.checks.filter((check) => check.status === "fail");
+        const warnings = result.checks.filter((check) => check.status === "warn");
+        const skipped = result.checks.filter((check) => check.status === "skip");
+        const improvements = [...failures, ...warnings];
+        const safeFiles = filesFor(improvements);
+
+        return `# Relatório RepoHealth
+
+Gerado em: ${new Date().toISOString()}
+
+## Resumo
+
+- Repositório analisado: \`${result.root}\`
+- Branch analisada: \`${result.branch}\`
+- Nota: **${result.score}/100 (${result.grade})**
+- Checks OK: **${result.summary.pass}**
+- Avisos: **${result.summary.warn}**
+- Falhas: **${result.summary.fail}**
+- Ignorados: **${result.summary.skip}**
+
+## Prioridades
+
+### Alta
+
+${failures.length > 0 ? failures.map((check) => `- **${check.title}:** ${check.message}`).join("\n") : "Nenhuma falha crítica encontrada."}
+
+### Média
+
+${warnings.length > 0 ? warnings.map((check) => `- **${check.title}:** ${check.message}`).join("\n") : "Nenhum aviso encontrado."}
+
+## Arquivos que podem ajudar
+
+${safeFiles.length > 0 ? safeFiles.map((file) => `- \`${file}\``).join("\n") : "Nenhum arquivo de template foi sugerido."}
+
+## Todos os checks
+
+| Status | Check | Mensagem |
+| --- | --- | --- |
+${result.checks.map((check) => `| ${STATUS_LABELS[check.status]} | ${escapeTable(check.title)} | ${escapeTable(check.message)} |`).join("\n")}
+
+## Checks ignorados
+
+${skipped.length > 0 ? skipped.map((check) => `- **${check.title}:** ${check.message}`).join("\n") : "Nenhum check foi ignorado."}
+
+## Prompt para IA
+
+Copie o bloco abaixo e cole em uma IA junto com o contexto do seu projeto:
+
+~~~text
+Atue como uma pessoa especialista em open source, documentação e qualidade de repositórios.
+
+Tenho um projeto com este relatório do RepoHealth:
+
+Nota: ${result.score}/100 (${result.grade})
+Repositório: ${result.root}
+Falhas: ${result.summary.fail}
+Avisos: ${result.summary.warn}
+
+Principais pontos para melhorar:
+${improvements.length > 0 ? improvements.map((check) => `- ${check.title}: ${check.message}`).join("\n") : "- Nenhum ponto crítico encontrado. Sugira melhorias finas de documentação, testes e onboarding."}
+
+Quero que você me ajude a melhorar este repositório sem quebrar o projeto.
+Primeiro gere um plano curto por prioridade.
+Depois sugira textos prontos para README, CONTRIBUTING, SECURITY, CHANGELOG ou testes quando fizer sentido.
+Se precisar alterar código, explique quais arquivos devem mudar e por quê.
+~~~
+`;
+      }
+
+      function filesFor(checks) {
+        const map = {
+          readme: ["README.md"],
+          license: ["LICENSE"],
+          gitignore: [".gitignore"],
+          contributing: ["CONTRIBUTING.md"],
+          "issue-templates": [".github/ISSUE_TEMPLATE/bug_report.md", ".github/ISSUE_TEMPLATE/feature_request.md"],
+          "pull-request-template": [".github/PULL_REQUEST_TEMPLATE.md"],
+          security: ["SECURITY.md"],
+          "env-example": [".env.example"],
+          changelog: ["CHANGELOG.md"],
+          "ai-ready": ["AGENTS.md"]
+        };
+
+        return [...new Set(checks.flatMap((check) => map[check.id] || []))];
+      }
+
+      function resetResult() {
+        elements.scoreRing.style.setProperty("--score", 0);
+        elements.scoreNumber.textContent = "--";
+        elements.scoreGrade.textContent = "Nota --";
+        elements.passCount.textContent = "0";
+        elements.warnCount.textContent = "0";
+        elements.failCount.textContent = "0";
+        elements.skipCount.textContent = "0";
+        elements.repoMeta.textContent = "";
+        elements.checksList.replaceChildren();
+        elements.reportPanel.hidden = true;
+        latestReport = "";
+      }
+
+      function downloadReport() {
+        if (!latestReport) return;
+        const blob = new Blob([latestReport], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = latestFileName;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function setBusy(isBusy, message) {
+        elements.scanButton.disabled = isBusy;
+        elements.downloadButton.disabled = isBusy || !latestReport;
+        if (message) {
+          setStatus(message);
+        }
+      }
+
+      function setStatus(message) {
+        elements.statusLine.className = "status-line";
+        elements.statusLine.textContent = message;
+      }
+
+      function setError(message) {
+        elements.statusLine.className = message ? "status-line error" : "status-line";
+        elements.statusLine.textContent = message;
+      }
+
+      function count(checks, status) {
+        return checks.filter((check) => check.status === status).length;
+      }
+
+      function grade(score) {
+        if (score >= 90) return "A";
+        if (score >= 80) return "B";
+        if (score >= 70) return "C";
+        if (score >= 60) return "D";
+        return "F";
+      }
+
+      function decodeBase64(content) {
+        const binary = atob(content.replace(/\s/g, ""));
+        const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
+      }
+
+      function encodePath(filePath) {
+        return filePath.split("/").map(encodeURIComponent).join("/");
+      }
+
+      function escapeRegExp(value) {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function escapeTable(value) {
+        return String(value).replaceAll("|", "\\|").replace(/\s+/g, " ").trim();
+      }
+    </script>
+  </body>
+</html>

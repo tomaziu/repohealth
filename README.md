@@ -7,7 +7,7 @@ RepoHealth é uma ferramenta para medir e melhorar a saúde de repositórios.
 
 Ela analisa sinais que ajudam outras pessoas a usar, confiar e contribuir com um projeto: README, licença, `.gitignore`, testes, CI, templates de issue, template de pull request, política de segurança, changelog e instruções para ferramentas de IA.
 
-O projeto tem uma CLI e uma interface gráfica local em português brasileiro.
+O projeto tem uma versão 100% online, uma CLI e uma interface gráfica local em português brasileiro.
 
 ## Por que usar
 
@@ -23,6 +23,7 @@ Use o RepoHealth para:
 
 ## Funcionalidades
 
+- App online para analisar repositórios públicos do GitHub por URL
 - Interface gráfica local com `repohealth ui`
 - CLI em português brasileiro por padrão
 - Suporte a inglês com `--lang en`
@@ -33,6 +34,30 @@ Use o RepoHealth para:
 - Saída JSON para automações
 - Gate de nota mínima para CI com `--min-score`
 - Sem dependências externas em runtime
+
+## Online
+
+A versão online fica em:
+
+```text
+https://tomaziu.github.io/repohealth/
+```
+
+Ela analisa repositórios públicos do GitHub sem instalação local. A pessoa cola uma URL como:
+
+```text
+https://github.com/tomaziu/repohealth
+```
+
+Depois pode baixar um relatório Markdown com prioridades, checks e um prompt pronto para pedir ajuda a uma IA.
+
+Para publicar no GitHub Pages:
+
+1. Abra o repositório no GitHub.
+2. Vá em **Settings > Pages**.
+3. Em **Build and deployment**, escolha **Deploy from a branch**.
+4. Em **Branch**, escolha `main` e a pasta `/docs`.
+5. Salve.
 
 ## Instalação local
 
@@ -183,6 +208,12 @@ node ./src/cli.mjs fix --dry-run
 O comando `report` não altera o projeto analisado. Ele apenas imprime ou salva um arquivo Markdown com o diagnóstico.
 
 ## Desenvolvimento
+
+Editar a versão online:
+
+```text
+docs/index.html
+```
 
 Rodar a CLI localmente:
 

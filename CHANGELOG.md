@@ -2,6 +2,13 @@
 
 Todas as mudanças relevantes do RepoHealth serão documentadas neste arquivo.
 
+## 0.4.0
+
+- App web 100% online em `docs/index.html`.
+- Análise de repositórios públicos do GitHub por URL.
+- Relatório Markdown para baixar direto do navegador.
+- Preparação para GitHub Pages.
+
 ## 0.3.0
 
 - Relatório Markdown com prioridades, checks e prompt para IA.
